@@ -1,0 +1,77 @@
+module
+ function
+ module attributes
+  - variables -  compile time constant
+   -document oriented constant variables @moduledoc,@doc
+
+contract:
+  @callback  - define required function signature (blue print) ==abstract method in java
+  @behaviour - tells the other module to adopt the blue print -  abstract method implementation     with class in java
+  @impl - placed above the function in the module to provide right implementation
+
+namespaces:
+  Structural qualifiers used to bundle related code under shared , capitalized module name.
+  To avoid name collisions 
+  
+File system analogy:
+   you can think of namespaces exactly as folder names
+
+
+ AppName.rootModule.subModule.subModule.Module Name
+
+ MyApp.payments.Gateways.Strip
+ MyApp.banking.accounts.Account 
+
+ __MODULE__  - It is macro which prints the current module
+ 
+keys to mange lengthy modules
+  
+1.alias - remove long path when we refer modules
+defmodule MyAppRepo.Payment.Paymentrepo do
+  alias MyApp.Model.Payment.Paymentmodel
+
+  def save() do
+    # MyApp.Model.Payment.Paymentmodel.save()
+    Paymentmodel.save()
+  end
+end
+
+2.import - import all functions , so we dont need to use ModuleName at all
+
+defmodule MyApp.MyMath.Math do
+  def add() do
+    10 + 10
+  end
+
+  def substract() do
+    10 - 2
+  end
+
+  def multiple do
+    10 * 2
+  end
+end
+
+
+defmodule MyApp.Controller.Payment.UpiPayment do
+  # Will import all functions from the given module == import * from java.lang
+  import MyAppRepo.Payment.Paymentrepo
+  # what if i want only specific functions
+  # only means only those functions available, [funName:numberofargs]
+  import MyApp.MyMath.Math, only: [add: 0, substract: 0]
+  @spec transfer() :: <<_::176>>
+  def transfer() do
+    # MyAppRepo.Payment.Paymentrepo.save()
+    save()
+  end
+
+  def calc() do
+    IO.puts("add #{add()}")
+    IO.puts("substract #{substract()}")
+    # IO.puts("multiply #{multiple()}")
+  end
+end
+
+
+
+   
