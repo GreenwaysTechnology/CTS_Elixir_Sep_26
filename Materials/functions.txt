@@ -1,0 +1,352 @@
+Guards:
+	Elixir guards are a mechanism to augment pattern matching with more complex, runtime checks. They are invoked using the when keyword and allow you to filter matches based on types, values, or specific ranges
+
+Where Guards Are UsedGuards can be applied anywhere pattern matching is supported:
+# 1. Named Function Clauses
+def drive(%{age: age}) when age >= 18, do: :allowed
+def drive(_), do: :denied
+
+# 2. Case Expressions
+case response do
+  {:ok, score} when score > 80 -> "Excellent!"
+  {:ok, _} -> "Passed"
+end
+
+# 3. Anonymous Functions
+check_even = fn x when rem(x, 2) == 0 -> true; _ -> false end
+
+Custom Guards You can create your own custom guards using defguard/1 or defguardp/1 (private). Custom guards must be composed strictly of existing, valid guard expressions
+
+defmodule MyGuards do
+  # Define the custom guard
+  defguard is_adult(age) when is_integer(age) and age >= 18
+
+  # Use the custom guard
+  def enter_club(age) when is_adult(age), do: "Welcome!"
+  def enter_club(_), do: "Go home."
+end
+
+Allowed Expressions in GuardsTo prevent side effects, Elixir strictly limits what can be executed inside a guard clause:
+
+Category         Allowed Operations /Functions  			 Examples
+Comparison	==, !=, ===, !==, >, >=, <, <=				x > 10
+
+Strict Boolean   and, or, not (Note: &&, ||, ! are not allowed)      is_integer(x) and x > 0
+
+Arithmetic	+, -, *, /, abs/1, div/2, rem/2, round/1		rem(x, 2) == 0
+
+
+Type Checks     is_atom/1, is_binary/1, is_integer/1, is_list/1
+			, is_map/1								       is_binary(name)
+
+Collections	in, not in (Right-hand side must be a list or range)    x in 1..10
+
+Built-in Extras  elem/2, tuple_size/1, map_size/1, byte_size/1       map_size(user) > 0
+
+
+
+Clauses
+
+In Elixir, a single function can have multiple bodies, which are called clauses.
+Instead of writing one giant function full of if/else or switch statements to handle different scenarios, Elixir allows you to split that function into separate, bite-sized clauses.
+
+When you call the function, the Erlang Virtual Machine (BEAM) reads down the list from top to bottom and pattern matches the input arguments to execute the first clause that fits.
+
+1. Basic Syntax of Multiple Clauses
+
+To write multiple clauses, you declare the function name (def) multiple times sequentially. Crucially, all clauses of a function must sit directly next to each other in the file.
+
+This is the most common syntax. Each clause consists of def or defp, the function name, arguments, an optional when guard, and a do...end block.
+
+
+syntax: no guard
+defmodule Greeter do
+  # Clause 1: Executes ONLY if the argument matches exactly "admin"
+  def login("admin") do
+    "Welcome to the master control panel!"
+  end
+
+  # Clause 2: Executes ONLY if the argument matches exactly "guest"
+  def login("guest") do
+    "Welcome! You have limited access."
+  end
+
+  # Clause 3: The Catch-All clause. Captures any other string/value into 'username'
+  def login(username) do
+    "Hello, #{username}. Welcome back!"
+  end
+end
+
+with guard
+defmodule PaymentProcessor do
+  # Clause 1
+  def process_payment(amount, "stripe") when amount > 0 do
+    # Multi-line logic goes here
+    {:ok, "Processed via Stripe"}
+  end
+
+  # Clause 2
+  def process_payment(amount, "paypal") when amount > 0 do
+    {:ok, "Processed via PayPal"}
+  end
+
+  # Clause 3 (Catch-all)
+  def process_payment(_amount, _unknown_provider) do
+    {:error, :invalid_provider_or_amount}
+  end
+end
+.....................................................................................
+
+Anonymous functions:
+In Elixir, anonymous functions are functions that do not have a name and are not bound to any specific module. They are often called lambdas or closures in other programming languages.
+
+While named functions (def) are meant for global, reusable logic, anonymous functions are typically used for quick, inline transformations
+
+
+1. Basic Declaration and Invocation
+
+Anonymous functions are created using the fn and end keywords. The parameters and the function body are separated by a right arrow (->).
+
+
+# 1. Declaration
+add = fn a, b -> a + b end
+
+# 2. Invocation (Notice the dot "." before the parentheses)
+result = add.(5, 3) 
+IO.puts(result) # Prints 8
+
+Why the dot (.) syntax exists:
+
+Elixir forces you to put a dot between the variable name and the parentheses (add.(5,3)) to explicitly tell the compiler: "I am calling an anonymous function inside a variable, not a named function defined inside a module." This completely prevents naming collisions.
+
+
+ Multiple Clauses in Anonymous Functions
+
+Just like named functions, anonymous functions can have multiple clauses to handle different shapes of input using pattern matching. You do not repeat the fn keyword; you just list your arrow patterns sequentially.
+
+defmodule Advancedfun do
+  def start() do
+    # A function to handle success or error outcomes
+    parse_response = fn
+      {:ok, body} -> "Success! Received: #{body}"
+      {:error, 404} -> "Not Found Error"
+      {:error, status} -> "Failed with status code: #{status}"
+    end
+    # "Success! Received: Dashboard Data"
+    IO.puts(parse_response.({:ok, "Dashboard Data"}))
+    IO.puts(parse_response.({:error, 404}))
+  end
+end
+
+4. Direct Comparison:
+ Named vs. Anonymous Functions
+FeatureNamed Functions (def)Anonymous Functions (fn)Where is it defined?Must live inside a module.Anywhere (inside files, variables, or scripts).Invocation SyntaxModule.function_name(args)variable_name.(args)
+
+Primary Use Case
+Building core application logic.
+Passing logic as arguments to other functions (Enum).Scope ExecutionEvaluated at runtime.Can close over and capture outer variables.
+
+
+1. Passing Anonymous Functions
+
+An anonymous function (fn -> end) can be passed directly by its variable name, or written completely inline inside the argument list.
+
+defmodule Advancedfun do
+  def start() do
+    # 1. Assign the anonymous function to a variable
+    is_even? = fn x -> rem(x, 2) == 0 end
+    # 2. Pass the variable directly as an argument
+    Enum.filter([1, 2, 3, 4], is_even?)
+    # Returns: [2, 4]
+  end
+end
+
+Passing Inline (Most Common):
+
+# Write the function directly where the argument is expected
+Enum.map([1, 2, 3], fn x -> x * 10 end)
+# Returns: [10, 20, 30]
+
+
+2. Passing Named Functions
+
+You cannot pass a named function simply by typing its name (e.g., Enum.map([1,2], String.upcase) will crash). 
+To pass a named function, you must use the Capture Operator (&) combined with the function's name and arity (number of arguments).This tells Elixir to look inside that module, package that specific function, and turn it into an executable reference.
+
+
+The Capture Operator (&) 
+
+ It is one of Elixir's most powerful syntactic shortcuts.
+ It serves two distinct purposes: it allows you to capture an existing named function into a    reusable variable, and it acts as a shortcut for creating quick anonymous functions
+
+1. Capturing Existing Functions
+
+In Elixir, because functions cannot exist standalone, you cannot just pass a function's name around as an argument. You use the & operator combined with the function's name and arity (number of arguments) to turn an existing function into an executable anonymous function.
+
+Syntax:
+elixir&ModuleName.function_name/arity
+
+Code Example:
+ Imagine you have a list of strings, and you want to convert them all to uppercase using String.upcase/1.
+
+# The traditional way (using a full anonymous function):
+Enum.map(["apple", "banana"], fn fruit -> String.upcase(fruit) end)
+
+# The Capture Operator way (cleaner and faster):
+Enum.map(["apple", "banana"], &String.upcase/1)
+# Returns: ["APPLE", "BANANA"]
+
+2. Creating Quick Anonymous Functions
+
+You can also use the & operator to create a completely new anonymous function on the fly without writing fn -> end. In this syntax, &1, &2, &3, etc., act as placeholders for the arguments passed into the function.
+
+# 1. Traditional Anonymous Function
+add_numbers = fn a, b -> a + b end
+add_numbers.(5, 10) # Returns 15
+
+# 2. Captured Shortcut equivalent
+add_numbers = &(&1 + &2)
+add_numbers.(5, 10) # Returns 15
+
+
+Here, &1 represents the first argument (5), and &2 represents the second argument (10).
+
+
+3. Capturing Local Functions (Inside the Same Module)If you want to capture a function that is defined inside your current module, you can omit the module prefix entirely.
+
+
+defmodule MathEngine do
+  def triple(x), do: x * 3
+
+  def run_pipeline(list) do
+    # Captures the local function triple/1
+    Enum.map(list, &triple/1)
+  end
+end
+
+Best Practices:
+
+Pitfall A: Readability ViolationsWhile &(&1 + &2) is clean, embedding complex logic inside a capture expression ruins readability. If your code spans multiple lines or has nested transformations, do not use the capture operator. Stick to traditional fn -> end blocks.
+
+
+# ❌ VERY HARD TO READ:
+Enum.map(users, &String.trim(&1.first_name <> " " <> &1.last_name))
+
+#  MUCH BETTER:
+Enum.map(users, fn user ->
+  full_name = user.first_name <> " " <> user.last_name
+  String.trim(full_name)
+end)
+
+&&&&&&&&&&&&&&&&
+
+Advanced: Dynamic Function Application:
+.................................................................
+
+In Elixir, Dynamic Function Application refers to the ability to invoke modules, functions, or arguments determined at runtime. In highly concurrent and fault-tolerant architectures, this flexibility allows for dynamic plugin loading, customizable message routers, or runtime execution pipelines.
+
+There are two main approaches to achieving this: using the low-level apply/3 built-in function, or using variable-based module targeting.
+
+
+1. The Kernel apply/3 FunctionThe core tool for extreme dynamism is Kernel.apply/3. It takes three arguments at runtime:The Module (an atom) [1]The Function (an atom) [1]
+The Arguments (a list) [1]
+
+
+defmodule Advancedfun do
+  def start() do
+    # Under the hood, these are identical:
+    String.length("hello")
+    # Returns 5
+    apply(String, :length, ["hello"])
+  end
+end
+
+2. Variable-Based Module Invocation
+
+If you already know the name of the function but the module changes depending on configuration or environment, Elixir lets you place a variable holding an atom right before the dot (.) syntax.
+
+defmodule MyApp.MockEngine do
+  def run, do: "Running fake test operations"
+end
+
+defmodule MyApp.ProdEngine do
+  def run, do: "Running real production operations"
+end
+
+defmodule MyApp.Runner do
+  def execute(engine_module) do
+    # engine_module will resolve to MyApp.MockEngine or MyApp.ProdEngine at runtime
+    engine_module.run()
+  end
+end
+
+# Usage:
+MyApp.Runner.execute(MyApp.MockEngine) # Returns: "Running fake test operations"
+
+
+3. Dynamic Function Extraction with &You can combine runtime variable values with the Capture Operator (&) by passing atoms into a module definition block:
+
+
+
+module = String
+func = :length
+
+# Dynamically capture String.length/1 at runtime
+captured_fn = Function.capture(module, func, 1)
+
+captured_fn.("Elixir") # Returns 6
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+
+Advanced: Function Composition Style using |> (pipe)
+
+In Elixir, Function Composition Style using the Pipe Operator (|>) allows you to transform data through a sequential chain of functions. Instead of nesting function calls from the inside out, the pipe operator takes the result of the expression on its left side and automatically injects it as the first argument of the function call on its right side.This turns hard-to-read nested code into clean, linear pipelines that read from top to bottom.
+
+
+1. The Transformation: 
+
+From Nested to Clean Pipes
+Imagine you need to process raw text input from a web form. You want to trim whitespace, lowercase the text, and replace spaces with hyphens to make a URL slug.The Nested Approach (Hard to Read)You have to read this from the inside out, meaning the first operation executed is actually at the very center:
+
+# Read from inside out: trim -> downcase -> replace
+url_slug = String.replace(String.downcase(String.trim("  Elixir Modules Rock  ")), " ", "-")
+# Returns: "elixir-modules-rock"
+
+The Function Composition Style (The Elixir Way)Using the pipe operator, data flows naturally from top to bottom. The return value of each step becomes the first parameter of the next function:
+
+
+2. Deep Dive: 
+Piping Multi-Argument Functions
+
+When a function takes multiple arguments, Elixir always pushes the piped data into the first position. Any extra arguments you supply in the parentheses are shifted over to become the second, third, or fourth parameters
+
+defmodule TextUtils do
+  # Expects 'text' as parameter 1, and 'suffix' as parameter 2
+  def append_suffix(text, suffix) do
+    text <> suffix
+  end
+end
+
+# Data flows into the first parameter ('text')
+"Hello" 
+|> TextUtils.append_suffix(" World")
+# Returns: "Hello World"
+
+
+3. Combining |>, Anonymous Functions, and the Capture Operator:
+
+Sometimes, you need to use an anonymous function or a calculation mid-pipeline. You can mix anonymous functions into your composition style by wrapping them in parentheses and immediately invoking them with the dot (.) syntax.
+
+result =
+  [1, 2, 3, 4]
+  |> Enum.map(&(&1 * 2))                        # Captured Named function shortcut
+  |> (fn numbers -> Enum.sum(numbers) end).()   # Inline anonymous function executed immediately
+.....................................................................................................................................
+
+Protocols and Behaviours (advanced OTP-oriented function abstraction)
+
+In Elixir, Behaviours and Protocols are the two primary mechanisms for achieving polymorphism and decoupling logic. While they both create abstract contracts for functions, they solve two entirely different architectural problems in production OTP systems.
+
+Behaviours focus on API Contracts & System Roles (What should a process or client do?)
+
+Protocols focus on Data-Type Polymorphism (How should different data structures respond to the same action?).

@@ -72,6 +72,35 @@ defmodule MyApp.Controller.Payment.UpiPayment do
   end
 end
 
+&&&&&&&&&&&&&
+
+Function:
+
+simple function declaration
+function invocation
+function parameters with default values
+
+Guards:
+ same function 
+ def functionName(args) when condition, do: body
+
+ custom guards
+ defguard name(parameter) when condtion1 and condition
+ defguard name(parameter) when condtion
+
+Clauses
+	def or defp funName(args) optionalwhen do: code
+	
+Types of functions:
+1.named function
+2.Anonymous functions
+ functional programming function itself is value -  we can assign to a variable,pass as parameter,we can return value
+3.function as parameter
+
+
+
+
+
 
 
    
