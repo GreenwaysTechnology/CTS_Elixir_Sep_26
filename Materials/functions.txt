@@ -184,7 +184,8 @@ The Capture Operator (&)
 In Elixir, because functions cannot exist standalone, you cannot just pass a function's name around as an argument. You use the & operator combined with the function's name and arity (number of arguments) to turn an existing function into an executable anonymous function.
 
 Syntax:
-elixir&ModuleName.function_name/arity
+
+&ModuleName.function_name/arity
 
 Code Example:
  Imagine you have a list of strings, and you want to convert them all to uppercase using String.upcase/1.

@@ -96,6 +96,9 @@ Types of functions:
 2.Anonymous functions
  functional programming function itself is value -  we can assign to a variable,pass as parameter,we can return value
 3.function as parameter
+  anonymous function
+4.capture operator
+5.arity -  number of parameters/args
 
 
 
