@@ -99,6 +99,430 @@ Types of functions:
   anonymous function
 4.capture operator
 5.arity -  number of parameters/args
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+pattern matching
+............................
+x=1  and 1=x both are valid
+
+use cases:
+ evaluating conditions
+ data validations
+ Destructuring complex data structures.
+
+= match operator
+
+iex(9)> result = :ok
+:ok
+iex(10)> :ok = result
+
+iex(11)> error = :error
+:error
+iex(12)> :ok =error
+** (MatchError) no match of right hand side value:
+
+    :error
+
+    (stdlib 8.0.4) er
+
+Complex pattern matching :
+
+Collections:
+   immutable - when ever you add,update,remove operations you perform on collections
+                    it creates new collections
+
+tuples:
+  ordered collection which is eq to array
+  accessed by index.
+functions:
+  elem - to get the value based on index
+ elem(point,2)
+
+add and immutability:
+iex(20)> res = put_elem(point,1,20)
+{1, 20, 3, 4}
+iex(21)> res
+{1, 20, 3, 4}
+iex(22)> point
+{1, 2, 3, 4}
+iex(23)> res == point
+false
+iex(24)> res === point
+
+use case: tagged tuple
+..................................
+ {:ok, result}  =    {:ok, "User created" }
+ {:err,errResult}= {:error, "Something went wrong"}
+defmodule TuplePattern do
+  def divide(a, b) do
+    if b == 0 do
+      #   "B cant be zero"
+      {:error, "Cant divide by Zero"}
+    else
+      {:ok, a / b}
+    end
+  end
+end
+
+iex(40)> person = {"john",30,"India"}
+{"john", 30, "India"}
+iex(41)> person
+{"john", 30, "India"}
+iex(42)> {name,age,country} = person
+{"john", 30, "India"}
+iex(43)> name
+"john"
+iex(44)> age
+30
+iex(45)> country
+"India"
+
+pattern must have the same structure:
+
+iex(46)> {x,y}=person
+** (MatchError) no match of right hand side value:
+
+    {"john", 30, "India"}
+
+    (stdlib 8.0.4) erl_eval.erl:796: :erl_eval.expr/6
+    iex:46: (file)
+
+if you dont want to access all fields you can use _ (unknown value)
+ {x,_,_}=person
+
+&&&&&&&&&&&&&&&&&
+
+pin operator and pattern matching
+
+ex(16)> x =10
+10
+iex(17)> {^x,name}={10,"Subu"}
+{10, "Subu"}
+iex(18)> {^x,name}={100,"Subu"}
+** (MatchError) no match of right hand side value:
+
+    {100, "Subu"}
+
+    (stdlib 8.0.4) erl_eval.erl:796: :erl_eval.expr/6
+    iex:18: (file)
+
+
+
+Passing tuple and pattern match with function
+defmodule TuplePattern do
+  def divide(a, b) do
+    if b == 0 do
+      #   "B cant be zero"
+      {:error, "Cant divide by Zero"}
+    else
+      {:ok, a / b}
+    end
+  end
+
+  # def add({a, b}) do
+  #   a + b
+  # end
+  #   def add({a, b}) do
+  #     a + b
+  #   end
+  #   def add(points \\ {0, 0}) do
+  #     {a, b} = points
+  #     a + b
+  #   end
+  def add({a, b} \\ {0, 0}) do
+    # {a, b} = points
+    a + b
+  end
+
+  #   def add(tup) do
+  #     {a, b} = tup
+  #     a + b
+  #   end
+end
+...............................
+  # Tuple , pattern matching, anonmous functions
+  def myFun() do
+    logger = fn
+      {status, msg} -> {:info, "something #{status} #{msg}"}
+    end
+
+    # logger.()
+    logger.({"xxx", "yyy"})
+  end
+
+List:
+
+languages = ["Elixir","Java","Cobal"]
+
+
+iex(39)> hd(languages)  -head
+"Elixir"
+iex(40)> tl(languages) - tail
+["Java", "Cobal"]
+
+&&&&&&&&&&&&&&
+| -  cons operator -  add an element into list - prepend
+
+ [0 | [1,2,3,4]] -  return new list
+ ["javascript" | languages]
+["javascript", "Elixir", "Java", "Cobal"] - new list
+
+ex(47)> newlanguages=["javascript" | languages]
+["javascript", "Elixir", "Java", "Cobal"]
+iex(48)> newlanguages
+["javascript", "Elixir", "Java", "Cobal"]
+iex(49)> newlanguages === languages
+false
+
+++:
+......
+iex(51)> [1,2,3] ++ [4,5]
+[1, 2, 3, 4, 5]
+iex(52)> n1 = [1,2,3]
+[1, 2, 3]
+iex(53)> n2 = [4,5]
+[4, 5]
+iex(54)> n1
+[1, 2, 3]
+iex(55)> n2
+[4, 5]
+iex(56)> n1 ++ n2
+[1, 2, 3, 4, 5]
+
+-- : remove element from the list based on element
+
+iex(58)> namelist = ["subu","murugan","ram","john"]
+["subu", "murugan", "ram", "john"]
+iex(59)> namelist -- ["subu"]
+["murugan", "ram", "john"]
+iex(60)>
+
+in : to verify the element is in the list
+ex(61)> "subu" in namelist
+true
+iex(62)> "subuadsfdsa" in namelist
+false
+.........
+pattern matching:
+head and tail elements
+
+iex(65)> [head | tail] = namelist
+["subu", "murugan", "ram", "john"]
+iex(66)> head
+"subu"
+iex(67)> tail
+["murugan", "ram", "john"]
+
+i want to only first element, dont want the rest of the elements:
+> [head | _] = namelist
+["subu", "murugan", "ram", "john"]
+iex(72)> head
+"subu"
+
+what if i want first two elements?
+iex(73)> [first,second | _] = namelist
+["subu", "murugan", "ram", "john"]
+iex(74)> first
+"subu"
+iex(75)> second
+"murugan"
+
+match exact list:
+ex(81)> [a,b,c,d] = [1,2,3]
+** (MatchError) no match of right hand side value:
+
+    [1, 2, 3]
+
+    (stdlib 8.0.4) erl_eval.erl:796: :erl_eval.expr/6
+    iex:81: (file)
+iex(81)> [a,b,c] = [1,2,3,9]
+** (MatchError) no match of right hand side value:
+
+    [1, 2, 3, 9]
+
+    (stdlib 8.0.4) erl_eval.erl:796: :erl_eval.expr/6
+    iex:81: (file)
+
+Empty list and | operator:
+iex(85)> [a | b] = [12]
+~c"\f"
+iex(86)> [a | b] = [12]
+~c"\f"
+iex(87)> a
+12
+iex(88)> b
+[]
+
+Strings and list:
+ name = "abc"  -binary
+"abc"
+ names = ["abc","bcd"]
+["abc", "bcd"] - string
+
+nested list:
+
+ [ [a,b,c] | tail] =  [[2,4,5],[3,4]]
+[[2, 4, 5], [3, 4]]
+iex(100)> a
+2
+iex(101)> b
+4
+iex(102)> c
+5
+
+
+functions and list:
+defmodule ListPattern do
+  def listFun(list) do
+    IO.inspect(list)
+  end
+end
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+keyword list
+
+ex(113)> [1,2,3]
+[1, 2, 3]
+iex(114)> ["a","b"]
+["a", "b"]
+iex(115)> [[]]
+[[]]
+iex(116)> [{1,2},{4,5}]
+[{1, 2}, {4, 5}]
+
+[a:1,b:2,c:3] - not map but list of tuple, first element called a,b,c becomes atom by default
+
+[{:a,1} ,{:b,2},{:c,3}] - internal representation
+
+
+names = [name: "a",role: :developer] == [{:name,"a"},{:role,:developer}]
+
+Key must be atoms
+Order is preserved
+Keys may repeat
+lookup is similar
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+Maps:
+
+%{key:value}
+
+ user
+%{id: 202, name: "Subramanian", skills: {"java", "Elixir"}}
+iex(15)> user
+%{id: 202, name: "Subramanian", skills: {"java", "Elixir"}}
+
+every key by default is atom - :id,:name,:skills
+iex(16)> user[:id]
+202
+iex(17)> user[:name]
+"Subramanian"
+iex(18)> user[:skills]
+{"java", "Elixir"}
+
+other than atom, key is defined  "key" => "value"
+
+ config = %{"host" => "localhost","port" => 4934}
+%{"host" => "localhost", "port" => 4934}
+
+
+iex(22)> config["host"]
+"localhost"
+iex(23)> config["port"]
+4934
+
+read values:
+iex(28)> user.name
+"Subramanian"
+iex(29)> user.id
+202
+iex(30)> user.age
+** (KeyError) key :age not found in:
+
+    %{id: 202, name: "Subramanian", skills: {"java", "Elixir"}}
+
+    iex:30: (file)
+iex(30)> user.skills
+{"java", "Elixir"}
+iex(31)>
+
+update values in the map:
+......................................
+iex(32)> user
+%{id: 202, name: "Subramanian", skills: {"java", "Elixir"}}
+iex(33)> %{user | name: "Subramanian Murugan"}
+%{id: 202, name: "Subramanian Murugan", skills: {"java", "Elixir"}}
+iex(34)> user
+%{id: 202, name: "Subramanian", skills: {"java", "Elixir"}}
+iex(35)>
+
+Adding new value into Map:
+iex(35)> Map.put(user,:role,:dev)
+%{id: 202, name: "Subramanian", role: :dev, skills: {"java", "Elixir"}}
+
+iex(36)> Map.values(user)
+[202, "Subramanian", {"java", "Elixir"}]
+iex(37)> Map.delete(user,:role)
+%{id: 202, name: "Subramanian", skills: {"java", "Elixir"}}
+iex(38)>
+
+&&&&&&&&&&&&&&&&&&
+Structs:
+ - It is built on top of map.
+
+defmodule User do 
+  defstruct id:0,name:"",age:0,roles:[] -  define the structure of data
+
+end
+
+
+iex(46)> %User{}
+%User{id: 0, name: "", age: 18}
+iex(47)> %User{name: "Subramanian"}
+%User{id: 0, name: "Subramanian", age: 18}
+iex(48)> user = %User{id: 1, name: "Subramnaian" , age: 46}
+%User{id: 1, name: "Subramnaian", age: 46}
+iex(49)> user.id
+1
+iex(50)> user.name
+"Subramnaian"
+iex(51)> user.age
+46
+iex(52)> user.skills
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Collection processing: 
+ Enumerables and Streams
+
+Enum
+ apis
+  map,filter
+
+passing the whole function as parameter
+ Enum.map([1,2,3],fn x -> x*2 end)
+passing the function using capture operator syntax
+num.map([10,20,30],&(&1*2)
+
+iex(65)> filter(list,&(rem(&1,2) == 0))
+[2, 4, 6, 8]
+iex(66)> filter(list,&(rem(&1,2) == 0))
+
+Pipeline Processing with list: chaining:
+............................................................
+filter---map---sum---xx-->xxx
+
+|> - pipeline operator 
+   list.filter().map().xxx - gives new list - immutable
+
+source |> filter |> map >| final api
+
+list
+[1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+list 
+|> filter(&(rem(&1,2)==0))
+|> map(&(&1 *10)) 
+|> sum()
 
 
 
@@ -106,4 +530,6 @@ Types of functions:
 
 
 
-   
+
+
+
