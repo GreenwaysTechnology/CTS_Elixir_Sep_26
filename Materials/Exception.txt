@@ -1,0 +1,60 @@
+In Elixir, try supports three different mechanisms:
+
+rescue handles exceptions raised with raise.
+
+catch handles values sent with throw or process exit signals.
+
+after runs cleanup code regardless of success or failure.
+
+The official Elixir documentation recommends using these constructs mainly for exceptional situations, not ordinary control flow.
+
+try do
+  # code that may raise, throw, or exit
+else
+  # successful result
+rescue
+  # raised exceptions
+catch
+  # throws or exits
+after
+  # always executed
+end
+
+Function-level shorthand
+Inside a function, you can omit the explicit try:
+
+def parse_number(value) do
+  Integer.parse(value)
+rescue
+  ArgumentError ->
+    {:error, :invalid_number}
+end
+This is equivalent to wrapping the function body in try/rescue.
+
+Prefer tagged tuples for expected errors
+For expected failures, use {:ok, value} and {:error, reason} instead of exceptions:
+def divide(a, b) when b != 0 do
+  {:ok, a / b}
+end
+
+def divide(_a, 0) do
+  {:error, :division_by_zero}
+end
+
+or
+Then handle the result with case or with:
+
+case divide(10, 2) do
+  {:ok, result} ->
+    result
+
+  {:error, reason} ->
+    {:error, reason}
+end
+
+Situation						Use
+Expected business failure		{:ok, value} / {:error, reason}
+Unexpected exception		rescue
+Non-local early return		throw / catch
+Process failure or shutdown signal	exit / catch or supervision
+Resource cleanup	after

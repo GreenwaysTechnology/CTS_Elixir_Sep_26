@@ -1,0 +1,103 @@
+
+Loops:
+
+Elixir has no traditional for / while / do…while loops. Instead, it uses recursion and higher-order functions (Enum.*, Stream.*) plus a special form called for comprehensions for iteration over enumerables.
+
+Why no for/while loops?
+Elixir is a functional language with immutable data. Classic loops rely on mutating a counter or accumulator, which doesn’t fit the model.
+
+The standard approach is:
+
+Recursion for custom iteration logic.
+Enum.map/2, Enum.reduce/3, Enum.each/2, etc., for common patterns.
+for comprehensions as syntactic sugar for mapping/filtering collections.
+
+Comprehensions:
+
+Core structure
+for pattern <- enumerable, optional_filters..., optional_options..., do: expression
+
+A comprehension has three conceptual parts:
+
+Generators: pattern <- enumerable — drive the iteration and can pattern-match.
+Filters: boolean expressions that skip values when falsy (nil/false)
+
+Collectables (:into option): where results are collected (list by default, or map, keyword, IO, etc.).
+
+Basic examples
+Map-like transformation:
+for n <- [1, 2, 3, 4], do: n * n
+Equivalent to Enum.map([1,2,3,4], fn n -> n * n end) but often more readable.
+
+Filter + map in one expression:
+
+for n <- 1..10, rem(n, 2) == 0, do: n * n
+The rem(n, 2) == 0 is a filter; non-matching values are skipped.
+
+
+Pattern-matching generator (also acts as a filter):
+
+for {:ok, value} <- [{:ok, 1}, {:error, :x}, {:ok, 2}], do: value
+Only elements matching {:ok, value} are kept.
+
+Multiple generators (nested loops / Cartesian product)
+Each additional generator nests inside the previous one, producing a Cartesian product.
+
+for i <- [:a, :b, :c], j <- [1, 2], do: {i, j}
+# => [a: 1, a: 2, b: 1, b: 2, c: 1, c: 2]
+Useful for combinations, cross-joins, or building grids/matrices
+
+Filters
+Filters must be truthy to keep a value; nil/false discard it. You can chain multiple filters.
+for n <- 1..20,
+    rem(n, 2) == 0,          # even numbers
+    n > 10,                  # greater than 10
+    do: n
+
+# => [12, 14, 16, 18, 20]
+
+Collecting into different data structures (:into)
+By default, comprehensions build a list. Use into: to target other collectables.
+
+into map
+for {key, val} <- [a: 1, b: 2, c: 3], into: %{}, do: {key, val * 10}
+# => %{a: 10, b: 20, c: 30}
+
+into keyword list:
+for {k, v} <- [x: 1, y: 2], into: [], do: {k, v * 2}
+# => [x: 2, y: 4]
+
+Comprehensions vs Enum functions
+Use for comprehensions when you want a compact, readable map/filter/transform in one expression.
+
+Use Enum.map/2, Enum.filter/2, Enum.reduce/3 when you need explicit function composition, custom reduction, or when the logic is clearer as named functions.
+
+A simple rule: if it reads like “for each x in collection, if condition, produce y”, a comprehension is often ideal.
+
+Recursion:
+In Elixir, recursion is the primary way to express repetition and iteration, replacing traditional loops. Functions call themselves with smaller or transformed data until a base case stops the recursion. This fits Elixir’s immutable data model and is heavily used with lists, trees, and other recursive structures
+
+Basic pattern: head/tail recursion on lists
+The canonical example is summing a list by decomposing it into head and tail:
+
+Basic pattern: head/tail recursion on lists
+The canonical example is summing a list by decomposing it into head and tail:
+
+elixir
+defmodule Math do
+  def sum_list([head | tail], accumulator) do
+    sum_list(tail, head + accumulator)
+  end
+
+  def sum_list([], accumulator) do
+    accumulator
+  end
+end
+
+Math.sum_list([1, 2, 3], 0)
+# => 6
+[head | tail] pattern-matches the list into first element and the rest. 
+
+The second clause ([]) is the base case that stops recursion.
+
+This is a reduce pattern: folding a collection into a single value.

@@ -492,7 +492,7 @@ iex(52)> user.skills
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
 
 Collection processing: 
- Enumerables and Streams
+ Enumerable and Streams
 
 Enum
  apis
@@ -523,6 +523,315 @@ list
 |> filter(&(rem(&1,2)==0))
 |> map(&(&1 *10)) 
 |> sum()
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+In java : Collections vs Streams 
+ Collections are eager, where as Streams lazy
+
+In Elixir streams are lazy enumerable
+
+Streams:
+ 1.Memory efficiency:
+    Enum loads entire data into memory in one go where as streams loads data on fly
+ 2.infinite data flow
+   since they generate the data on fly, streams can be used to represent infit data set
+
+Enum vs Stream
+
+defmodule Pipelines do
+  def process_enum() do
+    1..10
+    |> Enum.map(&(&1 * 2))
+    |> Enum.filter(&(&1 > 3))
+    |> Enum.sum()
+  end
+
+  def process_stream do
+    stream =
+      1..10
+      |> Stream.map(&(&1 * 2))
+      |> Enum.filter(&(&1 > 3))
+    #Execution triggers only when Enum.sum consumes the stream
+    Enum.sum(stream)
+  end
+end
+
+real world eg:
+ processing big files like 10gb flat files
+
+"bigFile.csv"
+  |> Enum.map  - this program crash automatically because due to memory limits
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+What case is for
+Use case 
+when you have one value (or tuple/map/result) and you want to execute different code depending on how it matches various patterns.
+
+
+
+Syntax and basic examples
+
+case expression do
+  pattern1 [when guard] -> result1
+  pattern2 [when guard] -> result2
+  _ -> fallback
+end
+
+Everything Is an Expression
+
+In Elixir, case, cond, if, and with are all expressions that return values. There are no statements. This means you can bind the result of any control flow construct to a variable:
+
+message = case status do
+  :ok -> "Success"
+  :error -> "Failure"
+end
+This eliminates the need for mutable variables that get reassigned inside branches.
+
+eg:
+case value do
+  :a -> "A"
+  :b -> "B"
+  _  -> "other"   # catch-all
+end
+
+iex(2)> value = :a
+:a
+iex(3)> case value do
+          :a -> "A"
+          :b -> "B"
+          _  -> "other"   # catch-all
+        end
+"A"
+iex(4)> value = :b
+:b
+iex(5)> case value do
+          :a -> "A"
+          :b -> "B"
+          _  -> "other"   # catch-all
+        end
+"B"
+iex(6)> value = :c
+:c
+iex(7)> case value do
+          :a -> "A"
+          :b -> "B"
+          _  -> "other"   # catch-all
+        end
+"other"
+
+
+ value = {:ok,-1}
+{:ok, -1}
+iex(23)> case value do
+            {:ok, n} when n > 0 -> "positive: #{n}"
+            {:ok, n} -> "non-positive: #{n}"
+            {:error, reason} -> "error: #{reason}"
+          end
+"non-positive: -1"
+
+..........
+Guards can also be used in case:
+
+case value do
+  x when is_binary(x) and byte_size(x) > 0 ->
+    "non-empty string"
+
+  x when is_binary(x) ->
+    "empty string"
+
+  x when is_number(x) and x >= 0 ->
+    "non-negative number"
+  _ ->
+    "something else"
+end
+
+real time example:
+defmodule ConfigReader do
+  def read_config do
+    case File.read("config.json") do
+      {:ok, content} ->
+        Jason.decode!(content)
+      {:error, :enoent} ->
+        %{"defaults" => true}
+
+      {:error, reason} ->
+        raise "Failed to read config: #{reason}"
+    end
+  end
+end
+
+mix.exs
+defmodule Patternmatch.MixProject do
+  use Mix.Project
+
+  def project do
+    [
+      app: :patternmatch,
+      version: "0.1.0",
+      elixir: "~> 1.20",
+      start_permanent: Mix.env() == :prod,
+      deps: deps()
+    ]
+  end
+
+  # Run "mix help compile.app" to learn about applications.
+  def application do
+    [
+      extra_applications: [:logger]
+    ]
+  end
+
+  # Run "mix help deps" to learn about dependencies.
+  defp deps do
+    [
+       {:jason, "~> 1.4"}
+      # {:dep_from_hexpm, "~> 0.3.0"},
+      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
+    ]
+  end
+end
+
+app
+  |
+  lib
+ config.json file
+
+
+config.json
+{
+  "database": "postgres",
+  "port": 5432,
+  "username": "admin"
+}
+........................
+
+Function heads vs case:
+
+	When to prefer pattern-matching in function heads instead
+
+For many cases, Elixir code pushes case logic into function clauses with pattern matching, which can be clearer:
+
+Function Heads:
+def handle({:ok, body}), do: {:ok, body}
+def handle({:error, reason}), do: {:error, reason}
+
+Case inside function:
+def handle(result) do
+  case result do
+    {:ok, body} ->
+      {:ok, body}
+
+    {:error, reason} ->
+      {:error, reason}
+  end
+end
+The above both are eq, but recommended is function heads
+
+The pattern matching at the function definition level.
+the pattern matching inside the function body.
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+cond:
+cond in Elixir is a control structure for checking multiple "boolean conditions" and running the code for the first truthy one. It’s used when you have several unrelated conditions rather than matching the shape of a single value
+
+
+Syntax
+cond do
+  condition1 -> result1
+  condition2 -> result2
+  condition3 -> result3
+  true -> fallback_result
+end
+
+Conditions are evaluated top to bottom.
+The first condition that is not nil or false (i.e., truthy) wins.
+If no condition matches and there’s no true fallback, Elixir raises a CondClauseError.
+
+egL
+age = 17
+
+message =
+  cond do
+    age < 0 -> "Invalid age"
+    age < 13 -> "Child"
+    age < 18 -> "Teen"
+    age < 65 -> "Adult"
+    true -> "Senior"
+  end
+
+# => "Teen"
+
+Here each branch is a different boolean expression; cond picks the first true one.
+
+Truthy vs falsy in Elixir
+Falsy: only false and nil.
+
+Truthy: everything else (numbers, strings, empty lists, empty maps, atoms other than false, etc.).
+
+status = 404
+
+response =
+  cond do
+    status >= 200 and status < 300 -> :success
+    status >= 400 and status < 500 -> :client_error
+    status >= 500 -> :server_error
+    true -> :unknown
+  end
+
+ temperature = 35
+
+ cond do
+   temperature > 40 -> "extremely hot"
+   temperature > 30 -> "hot"
+   temperature > 20 -> "comfortable"
+   temperature > 10 -> "cool"
+   true -> "cold"
+ end
+&&&&&&&&&&&&&&
+If and Unless
+In Elixir, if and unless are the simplest control structures: they handle a single condition with two possible branches
+
+if:
+syntax:
+if condition do
+  # runs when condition is truthy
+else
+  # runs when condition is falsy (nil or false)
+end
+
+eg:
+count=1
+
+if count > 0, do: "Has items", else: "Empty"
+
+unless:
+	unless is the inverse of if: the do block runs when the condition is falsy, and else runs when it’s truthy.
+
+unless condition do
+  # runs when condition is falsy
+else
+  # runs when condition is truthy
+end
+
+age=10
+iex(20)> unless age >= 18, do: "Minor", else: "Adult"
+"Minor"
+
+When to use if/unless vs case/cond?
+
+1.Use if/unless for a single condition with two outcomes.
+2.Use cond for multiple boolean conditions.
+3.Use case to match a single value against different patterns (tags, tuple shapes, map keys).
+
+
+
+
+
+
+
+
+
 
 
 
