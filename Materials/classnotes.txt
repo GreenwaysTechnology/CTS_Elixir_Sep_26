@@ -824,9 +824,134 @@ When to use if/unless vs case/cond?
 2.Use cond for multiple boolean conditions.
 3.Use case to match a single value against different patterns (tags, tuple shapes, map keys).
 
+with:
+it chains multiple pattern matches and stops at the first failed match.
+If every match succeeds, the `do` block runs; otherwise, the unmatched value is returned or handled by `else`
+
+syntax:
+with pattern1 <- expression1,
+       pattern2 <- expression2 
+       patternN <- expression3 do
+  success_result
+else
+  failure_pattern -> failure_result
+end
+
+eg:
+defmodule Withapi do
+  def get_user_email(user_id) do
+    # when i call find_user , it returns the :ok with map  the output of finduser
+    # will be input to the get_email, get_email returns final response
+    with {:ok, user} <- find_user(user_id),
+         {:ok, email} <- get_email(user) do
+          # Final response
+      {:ok, email}
+    else
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  def find_user(1) do
+    {:ok, %{id: 1, email: "alice@example.com"}}
+  end
+
+  def find_user(_id) do
+    {:error, :user_not_found}
+  end
+
+  def get_email(%{email: email}) do
+    {:ok, email}
+  end
+end
+
+Usage:
+get_user_email(1)
+{:ok, "alice@example.com"}
+iex(97)> get_user_email(111)
+{:error, :user_not_found}
+
+Loops:
+
+Elixir has no traditional for / while / do…while loops. Instead, it uses recursion and higher-order functions (Enum.*, Stream.*) plus a special form called for comprehensions for iteration over enumerables.
+
+Why no for/while loops?
+
+Elixir is a functional language with immutable data. Classic loops rely on mutating a counter or accumulator, which doesn’t fit the model.
+
+The standard approach is:
+
+Recursion for custom iteration logic.
+
+Enum.map/2, Enum.reduce/3, Enum.each/2, etc., for common patterns.
+for comprehensions as syntactic sugar for mapping/filtering collections.
+
+Comprehensions:
+
+Core structure
+
+for pattern <- enumerable, optional_filters..., optional_options..., do: expression
+
+A comprehension has three conceptual parts:
+......................................................................
+
+Generators: pattern <- enumerable — drive the iteration and can pattern-match.
+Filters: boolean expressions that skip values when falsy (nil/false)
+Collectables (:into option): where results are collected (list by default, or map, keyword, IO, etc.).
+
+Basic examples
+
+Map-like transformation:
+
+for n <- [1, 2, 3, 4], do: n * n
+Equivalent to Enum.map([1,2,3,4], fn n -> n * n end) but often more readable.
+
+Filter + map in one expression:
+for n <- 1..10, rem(n, 2) == 0, do: n * n
+The rem(n, 2) == 0 is a filter; non-matching values are skipped.
 
 
+Pattern-matching generator (also acts as a filter):
 
+for {:ok, value} <- [{:ok, 1}, {:error, :x}, {:ok, 2}], do: value
+Only elements matching {:ok, value} are kept.
+
+Multiple generators (nested loops / Cartesian product)
+Each additional generator nests inside the previous one, producing a Cartesian product.
+
+for i <- [:a, :b, :c], j <- [1, 2], do: {i, j}
+# => [a: 1, a: 2, b: 1, b: 2, c: 1, c: 2]
+Useful for combinations, cross-joins, or building grids/matrices
+
+Filters
+Filters must be truthy to keep a value; nil/false discard it. You can chain multiple filters.
+for n <- 1..20,
+    rem(n, 2) == 0,          # even numbers
+    n > 10,                  # greater than 10
+    do: n
+
+# => [12, 14, 16, 18, 20]
+
+Collecting into different data structures (:into)
+...........................................................................
+
+By default, comprehensions build a list. Use into: to target other collectables.
+
+into map
+for {key, val} <- [a: 1, b: 2, c: 3], into: %{}, do: {key, val * 10}
+# => %{a: 10, b: 20, c: 30}
+
+into keyword list:
+for {k, v} <- [x: 1, y: 2], into: [], do: {k, v * 2}
+# => [x: 2, y: 4]
+
+Comprehensions vs Enum functions
+
+Use for comprehensions when you want a compact, readable map/filter/transform in one expression.
+
+Use Enum.map/2, Enum.filter/2, Enum.reduce/3 when you need explicit function composition, custom reduction, or when the logic is clearer as named functions.
+
+A simple rule: if it reads like “for each x in collection, if condition, produce y”, a comprehension is often ideal.
 
 
 
