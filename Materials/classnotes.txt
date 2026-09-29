@@ -955,7 +955,99 @@ A simple rule: if it reads like “for each x in collection, if condition, produ
 
 
 
+Recursion:
+	In Elixir, recursion is the primary way to express repetition and iteration, replacing traditional loops. 
+Functions call themselves with smaller or transformed data until a base case stops the recursion. This fits Elixir’s immutable data model and is heavily used with lists, trees, and other recursive structures
 
+Basic pattern: head/tail recursion on lists
+
+The canonical example is summing a list by decomposing it into head and tail:
+
+Basic pattern: head/tail recursion on lists
+
+The canonical example is summing a list by decomposing it into head and tail:
+
+
+defmodule Math do
+  def sum_list([head | tail], accumulator) do
+    sum_list(tail, head + accumulator)
+  end
+
+  def sum_list([], accumulator) do
+    accumulator
+  end
+end
+
+Math.sum_list([1, 2, 3], 0)
+# => 6
+[head | tail] pattern-matches the list into first element and the rest. 
+
+The second clause ([]) is the base case that stops recursion.
+
+This is a reduce pattern: folding a collection into a single value.
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Exception handling:
+...............................
+try,catch,and rescue
+
+Errors:
+  Exception is thrown when unexpected results
+
+eg:
+ 10 + :a
+** (ArithmeticError) bad argument in arithmetic expression: 10 + :a
+    :erlang.+(10, :a)
+    iex:140: (file)
+
+raise:
+   throw new errors / custom errors
+
+iex(140)> raise "oops something went wrong"
+** (RuntimeError) oops something went wrong
+    iex:140: (file)
+
+ raise ArithmeticError, message: "Invalid operations"
+** (ArithmeticError) Invalid operations
+    iex:140: (file)
+
+can we define custom/biz logic Exception
+
+defmodule MyError do
+   defexception message: "Hello,I am Exception"
+end
+raise MyError
+** (MyError) Hello,I am Exception
+    iex:143: (file)
+
+raise MyError , message: "Your Exception"
+** (MyError) Your Exception
+    iex:143: (file)
+
+.......................
+rescue block : 
+
+try/rescue construct
+
+ try do
+           raise "oops"
+          rescue
+             e in RuntimeError -> e
+          end
+
+response:
+%RuntimeError{message: "oops"}
+
+Best Practice:
+  - dont use try/rescue mostly
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Fail fast /Let it catch:
+..................................
+
+
+protocals,meta programming,dsls,macros,process === > Frameworks -  LiveView,Database,how to connect message brokers
 
 
 
