@@ -569,7 +569,6 @@ Use case
 when you have one value (or tuple/map/result) and you want to execute different code depending on how it matches various patterns.
 
 
-
 Syntax and basic examples
 
 case expression do
@@ -1042,12 +1041,26 @@ Best Practice:
   - dont use try/rescue mostly
 
 &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
-
 Fail fast /Let it catch:
 ..................................
 
-
 protocals,meta programming,dsls,macros,process === > Frameworks -  LiveView,Database,how to connect message brokers
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
